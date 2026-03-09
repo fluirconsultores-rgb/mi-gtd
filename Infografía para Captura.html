@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infografía GTD Diario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
+        body { font-family: 'Outfit', sans-serif; }
+        .flow-svg { filter: drop-shadow(0 10px 15px rgba(0,0,0,0.05)); }
+    </style>
+</head>
+<body class="bg-slate-900 flex items-center justify-center min-h-screen p-8">
+    
+    <!-- Contenedor principal para captura -->
+    <div id="capture-area" class="bg-white p-12 rounded-[3.5rem] shadow-2xl max-w-4xl w-full border-[12px] border-indigo-50">
+        
+        <header class="text-center mb-12">
+            <span class="bg-indigo-600 text-white px-5 py-1.5 rounded-full text-[10px] font-black tracking-[0.2em] uppercase">Guía Visual de Procesos</span>
+            <h1 class="text-6xl font-black text-slate-900 mt-6 tracking-tighter">GTD DIARIO</h1>
+            <p class="text-slate-400 mt-3 text-lg font-medium">Metodología para una mente como el agua</p>
+        </header>
+
+        <div class="flex justify-center">
+            <svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg" class="flow-svg w-full h-auto">
+                <!-- Definiciones de marcadores de flecha -->
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#CBD5E1" />
+                    </marker>
+                </defs>
+
+                <!-- 1. CAPTURAR -->
+                <rect x="300" y="40" width="200" height="60" rx="16" fill="#4F46E5"/>
+                <text x="400" y="77" text-anchor="middle" fill="white" font-family="Outfit, sans-serif" font-weight="900" font-size="18">1. CAPTURAR</text>
+                <text x="400" y="115" text-anchor="middle" fill="#94A3B8" font-family="Outfit, sans-serif" font-weight="bold" font-size="12">Bandeja de Entrada (Inbox)</text>
+
+                <!-- Flecha 1 -> Decisión -->
+                <path d="M400 125V160" stroke="#CBD5E1" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+                <!-- 2. CLARIFICAR (Diamante) -->
+                <path d="M400 165L510 215L400 265L290 215Z" fill="#F8FAFC" stroke="#4F46E5" stroke-width="3"/>
+                <text x="400" y="220" text-anchor="middle" fill="#1E293B" font-family="Outfit, sans-serif" font-weight="800" font-size="14">¿ACCIONABLE?</text>
+
+                <!-- Camino NO -->
+                <path d="M290 215H170" stroke="#CBD5E1" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <text x="230" y="205" text-anchor="middle" fill="#F43F5E" font-family="Outfit, sans-serif" font-weight="900" font-size="12">NO</text>
+                
+                <rect x="40" y="175" width="130" height="40" rx="12" fill="#FFF1F2" stroke="#FECDD3" stroke-width="1"/>
+                <text x="105" y="200" text-anchor="middle" fill="#E11D48" font-family="Outfit, sans-serif" font-weight="bold" font-size="11">ELIMINAR</text>
+                
+                <rect x="40" y="225" width="130" height="40" rx="12" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1"/>
+                <text x="105" y="250" text-anchor="middle" fill="#166534" font-family="Outfit, sans-serif" font-weight="bold" font-size="11">ALGÚN DÍA</text>
+
+                <!-- Camino SÍ -->
+                <path d="M400 265V310" stroke="#CBD5E1" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <text x="415" y="290" text-anchor="start" fill="#10B981" font-family="Outfit, sans-serif" font-weight="900" font-size="12">SÍ</text>
+
+                <!-- 3. ORGANIZAR -->
+                <rect x="300" y="315" width="200" height="50" rx="14" fill="#1E293B"/>
+                <text x="400" y="347" text-anchor="middle" fill="white" font-family="Outfit, sans-serif" font-weight="700" font-size="16">3. ORGANIZAR</text>
+
+                <!-- Ramas -->
+                <!-- Acciones Próximas -->
+                <path d="M300 340H185V390" fill="none" stroke="#CBD5E1" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <rect x="125" y="400" width="120" height="55" rx="12" fill="#EFF6FF" stroke="#DBEAFE" stroke-width="1"/>
+                <text x="185" y="428" text-anchor="middle" fill="#1D4ED8" font-family="Outfit, sans-serif" font-weight="800" font-size="11">ACCIÓN</text>
+                <text x="185" y="442" text-anchor="middle" fill="#1D4ED8" font-family="Outfit, sans-serif" font-weight="800" font-size="11">PRÓXIMA</text>
+
+                <!-- Proyectos -->
+                <path d="M400 365V390" fill="none" stroke="#CBD5E1" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <rect x="340" y="400" width="120" height="55" rx="12" fill="#FAF5FF" stroke="#F3E8FF" stroke-width="1"/>
+                <text x="400" y="435" text-anchor="middle" fill="#7E22CE" font-family="Outfit, sans-serif" font-weight="800" font-size="12">PROYECTO</text>
+
+                <!-- En Espera -->
+                <path d="M500 340H615V390" fill="none" stroke="#CBD5E1" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <rect x="555" y="400" width="120" height="55" rx="12" fill="#FFFBEB" stroke="#FEF3C7" stroke-width="1"/>
+                <text x="615" y="435" text-anchor="middle" fill="#B45309" font-family="Outfit, sans-serif" font-weight="800" font-size="12">EN ESPERA</text>
+
+                <!-- 4. HACER -->
+                <path d="M400 455V500" stroke="#CBD5E1" stroke-width="2" marker-end="url(#arrowhead)"/>
+                <rect x="300" y="515" width="200" height="60" rx="30" fill="#10B981"/>
+                <text x="400" y="552" text-anchor="middle" fill="white" font-family="Outfit, sans-serif" font-weight="900" font-size="18">4. HACER</text>
+            </svg>
+        </div>
+
+        <footer class="mt-12 pt-8 border-t border-slate-100 flex justify-between items-center text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                <span>GTD Diario v1.1</span>
+            </div>
+            <span>Organización sin fricción</span>
+        </footer>
+    </div>
+
+</body>
+</html>
