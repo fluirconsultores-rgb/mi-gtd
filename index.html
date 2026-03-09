@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTD Diario | Gestión en la Nube</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .column-height {
+            height: calc(100vh - 320px);
+        }
+
+        .task-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .progress-bar {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .animate-slide-right {
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        .tab-active {
+            background-color: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+        }
+
+        .overload-pulse {
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); background-color: #fee2e2; }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Notificación Toast de Reporte -->
+    <div id="auto-report-toast" class="fixed bottom-6 left-6 z-[100] hidden">
+        <div class="bg-indigo-600 text-white p-6 rounded-2xl shadow-2xl flex items-center gap-4 border border-indigo-400">
+            <div class="text-3xl">📝</div>
+            <div>
+                <p class="font-bold text-sm">¡Hora del reporte!</p>
+                <p class="text-[10px] opacity-90">Tu resumen de GTD Diario está listo.</p>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="shareReport('whatsapp')" class="bg-white text-indigo-600 px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-indigo-50">WhatsApp</button>
+                    <button onclick="dismissToast()" class="text-white opacity-60 text-[10px] hover:opacity-100 ml-2">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navegación -->
+    <nav class="bg-white border-b border-slate-200 py-4 px-8 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-[1600px] mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-slate-900 tracking-tight">GTD <span class="text-indigo-600">DIARIO</span></h1>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Sincronizado en la Nube</p>
+                </div>
+            </div>
+            <div class="flex gap-4 items-center">
+                <div id="sync-status" class="text-[10px] font-bold text-slate-400 flex items-center gap-2 mr-4">
+                    <span class="w-2 h-2 rounded-full bg-slate-300"></span> Conectando...
+                </div>
+                <button onclick="toggleReport()" class="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95">
+                    <span>📊</span> REPORTES
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-[1600px] mx-auto p-6">
+        <!-- Input de Captura -->
+        <section class="mb-10 max-w-4xl mx-auto">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4 items-end">
+                <div class="flex-1 w-full">
+                    <label class="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">📥 Captura Rápida</label>
+                    <input type="text" id="inbox-input" placeholder="¿Qué tienes en mente? No lo proceses aún..." 
+                           class="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-lg transition-all"
+                           onkeypress="if(event.key === 'Enter') addToInbox()">
+                </div>
+                <button onclick="addToInbox()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-10 rounded-2xl shadow-xl shadow-indigo-100 transition-all active:scale-95">
+                    CAPTURA
+                </button>
+            </div>
+        </section>
+
+        <!-- Tablero de Columnas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between px-2 text-slate-400 uppercase text-[10px] font-black tracking-widest">
+                    <span>Inbox</span><span id="count-inbox">0</span>
+                </div>
+                <div id="col-inbox" class="column-height custom-scrollbar overflow-y-auto space-y-3 p-1"></div>
+            </div>
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between px-2 text-blue-600 uppercase text-[10px] font-black tracking-widest">
+                    <div class="flex flex-col">
+                        <span>Acciones Próximas</span>
+                        <span id="warning-next" class="text-[9px] text-rose-500 mt-1 hidden">⚠️ Sobrecarga</span>
+                    </div>
+                    <span id="count-next">0</span>
+                </div>
+                <div id="col-next" class="column-height custom-scrollbar overflow-y-auto space-y-3 p-1"></div>
+            </div>
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between px-2 text-purple-600 uppercase text-[10px] font-black tracking-widest">
+                    <span>Proyectos</span><span id="count-projects">0</span>
+                </div>
+                <div id="col-projects" class="column-height custom-scrollbar overflow-y-auto space-y-3 p-1"></div>
+            </div>
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between px-2 text-amber-600 uppercase text-[10px] font-black tracking-widest">
+                    <span>En Espera</span><span id="count-waiting">0</span>
+                </div>
+                <div id="col-waiting" class="column-height custom-scrollbar overflow-y-auto space-y-3 p-1"></div>
+            </div>
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between px-2 text-emerald-600 uppercase text-[10px] font-black tracking-widest">
+                    <span>Algún día</span><span id="count-someday">0</span>
+                </div>
+                <div id="col-someday" class="column-height custom-scrollbar overflow-y-auto space-y-3 p-1"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="p-4 text-center text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+        ID de Usuario: <span id="user-display-id" class="text-slate-400">---</span>
+    </footer>
+
+    <!-- MODAL: Clarificar Tarea -->
+    <div id="process-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] max-w-lg w-full p-8 shadow-2xl">
+            <h2 class="text-2xl font-black text-slate-900 mb-2">Procesar Tarea</h2>
+            <p id="modal-task-text" class="text-slate-500 italic mb-8 border-l-4 border-indigo-500 pl-4 py-1">"..."</p>
+            <div class="space-y-6">
+                <div>
+                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">1. ¿Requiere acción inmediata?</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="setNoAction()" class="py-4 border-2 border-slate-100 rounded-2xl text-sm font-bold text-slate-600">No (Idea)</button>
+                        <button onclick="setYesAction()" class="py-4 border-2 border-indigo-600 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-lg">Sí (Hacer)</button>
+                    </div>
+                </div>
+                <div id="action-options" class="hidden space-y-2">
+                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">2. ¿Dónde encaja mejor?</p>
+                    <button onclick="moveTo('next')" class="w-full text-left p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold">Acción Próxima</button>
+                    <button onclick="moveTo('projects')" class="w-full text-left p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold">Proyecto</button>
+                    <button onclick="moveTo('waiting')" class="w-full text-left p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold">En Espera</button>
+                </div>
+                <div id="no-action-options" class="hidden space-y-2">
+                    <button onclick="moveTo('someday')" class="w-full text-left p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold">Algún día / Tal vez</button>
+                    <button onclick="deleteCurrentTask()" class="w-full text-left p-4 bg-rose-50 border border-rose-100 rounded-xl font-bold text-rose-700">Eliminar</button>
+                </div>
+            </div>
+            <button onclick="closeModal()" class="mt-8 w-full py-2 text-slate-400 font-bold text-sm">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- PANEL LATERAL -->
+    <div id="report-panel" class="fixed inset-y-0 right-0 w-full md:w-[450px] bg-white shadow-2xl z-[70] hidden flex-col border-l border-slate-200 animate-slide-right">
+        <div class="p-8 border-b border-slate-100 bg-slate-50/50">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tighter">Historial</h2>
+                <button onclick="toggleReport()" class="text-slate-400 hover:text-slate-900 p-2">✕</button>
+            </div>
+            <div class="flex bg-slate-200/50 p-1 rounded-xl gap-1">
+                <button id="btn-period-day" onclick="changePeriod('day')" class="flex-1 py-2 text-[9px] font-black rounded-xl tab-active">HOY</button>
+                <button id="btn-period-week" onclick="changePeriod('week')" class="flex-1 py-2 text-[9px] font-black rounded-xl text-slate-500">SEMANA</button>
+                <button id="btn-period-month" onclick="changePeriod('month')" class="flex-1 py-2 text-[9px] font-black rounded-xl text-slate-500">MES</button>
+                <button id="btn-period-year" onclick="changePeriod('year')" class="flex-1 py-2 text-[9px] font-black rounded-xl text-slate-500">AÑO</button>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-10">
+            <div class="grid grid-cols-2 gap-4 text-center">
+                <div class="bg-emerald-50 p-5 rounded-3xl border border-emerald-100">
+                    <p class="text-[10px] font-black text-emerald-600 uppercase">Logros</p>
+                    <p id="stat-done" class="text-4xl font-black text-emerald-700">0</p>
+                </div>
+                <div class="bg-indigo-50 p-5 rounded-3xl border border-indigo-100">
+                    <p class="text-[10px] font-black text-indigo-600 uppercase">Activas</p>
+                    <p id="stat-active" class="text-4xl font-black text-indigo-700">0</p>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest">📦 Archivo de Tareas</h3>
+                <div id="archive-list" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // CONFIGURACIÓN GLOBALES
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'gtd-diario-default';
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let user = null;
+        let tasks = [];
+        let processingId = null;
+        let currentPeriod = 'day';
+
+        // --- AUTH ---
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Error de autenticación", error);
+            }
+        }
+
+        onAuthStateChanged(auth, (u) => {
+            user = u;
+            if (user) {
+                document.getElementById('user-display-id').innerText = user.uid;
+                document.getElementById('sync-status').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Conectado';
+                setupSubscription();
+            }
+        });
+
+        // --- FIRESTORE SUBSCRIPTION ---
+        function setupSubscription() {
+            if (!user) return;
+            const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'data');
+            
+            onSnapshot(userDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    tasks = docSnap.data().tasks || [];
+                    window.tasks = tasks; // Acceso global para funciones simples
+                    render();
+                    if (!document.getElementById('report-panel').classList.contains('hidden')) updateReportUI();
+                }
+            }, (error) => {
+                console.error("Error cargando datos", error);
+            });
+        }
+
+        async function syncData() {
+            if (!user) return;
+            const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'data');
+            try {
+                await setDoc(userDocRef, { tasks: tasks }, { merge: true });
+            } catch (error) {
+                console.error("Error sincronizando", error);
+            }
+        }
+
+        // --- LÓGICA DE NEGOCIO ---
+        window.addToInbox = () => {
+            const input = document.getElementById('inbox-input');
+            if (!input.value.trim()) return;
+            tasks.push({
+                id: Date.now(),
+                text: input.value.trim(),
+                category: 'inbox',
+                completed: false,
+                subtasks: [],
+                createdAt: new Date().toISOString(),
+                completedAt: null,
+                scheduledDate: null
+            });
+            input.value = '';
+            syncData();
+        };
+
+        window.render = () => {
+            const columns = ['inbox', 'next', 'projects', 'waiting', 'someday'];
+            const today = new Date().toISOString().split('T')[0];
+
+            columns.forEach(col => {
+                const container = document.getElementById(`col-${col}`);
+                const activeTasks = tasks.filter(t => t.category === col && !t.completed);
+                
+                // Sobrecarga
+                if (col === 'next') {
+                    const counter = document.getElementById('count-next');
+                    const warning = document.getElementById('warning-next');
+                    if (activeTasks.length > 5) {
+                        counter.className = "bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full overload-pulse";
+                        warning.classList.remove('hidden');
+                    } else {
+                        counter.className = "bg-blue-100 text-blue-600 text-[10px] font-black px-2 py-0.5 rounded-full";
+                        warning.classList.add('hidden');
+                    }
+                }
+                
+                document.getElementById(`count-${col}`).innerText = activeTasks.length;
+                container.innerHTML = '';
+
+                if (activeTasks.length === 0) {
+                    container.innerHTML = `<div class="py-10 text-center text-slate-300 text-[10px] font-black border border-dashed border-slate-100 rounded-2xl uppercase tracking-widest">Libre</div>`;
+                    return;
+                }
+
+                activeTasks.sort((a,b)=>b.id-a.id).forEach(task => {
+                    const card = document.createElement('div');
+                    card.className = `task-card bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-3 group`;
+                    
+                    let extra = '';
+                    if (task.category === 'projects') {
+                        const done = task.subtasks.filter(s => s.done).length;
+                        const pct = task.subtasks.length > 0 ? (done / task.subtasks.length) * 100 : 0;
+                        extra = `
+                            <div class="mt-1 pt-2 border-t border-slate-50">
+                                <div class="w-full bg-slate-100 h-1 rounded-full"><div class="bg-indigo-500 h-full rounded-full transition-all" style="width:${pct}%"></div></div>
+                                <div class="mt-2 space-y-1">
+                                    ${task.subtasks.map(s => `<div class="flex items-center gap-2 text-[10px]"><input type="checkbox" ${s.done?'checked':''} onclick="toggleSub(${task.id}, ${s.id})"> <span class="${s.done?'line-through text-slate-300':'text-slate-600'} flex-1 truncate">${s.text}</span><button onclick="deleteSub(${task.id}, ${s.id})" class="text-slate-200">✕</button></div>`).join('')}
+                                </div>
+                                <input type="text" placeholder="Añadir..." onkeypress="if(event.key==='Enter') addSub(${task.id}, this.value)" class="text-[10px] w-full mt-2 bg-slate-50 p-2 rounded-lg border-none outline-none">
+                            </div>
+                        `;
+                    } else if (task.category === 'waiting') {
+                        const over = task.scheduledDate && task.scheduledDate <= today;
+                        extra = `<div class="mt-1 pt-2 border-t border-slate-50"><input type="date" value="${task.scheduledDate||''}" onchange="updateDate(${task.id}, this.value)" class="w-full text-[10px] bg-slate-50 p-2 rounded-lg border-none ${over?'text-rose-500 font-bold bg-rose-50':''}"></div>`;
+                    }
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start gap-2">
+                            <p class="text-sm font-bold text-slate-700 leading-snug flex-1">${task.text}</p>
+                            <button onclick="deleteTask(${task.id})" class="opacity-0 group-hover:opacity-100 text-slate-300">✕</button>
+                        </div>
+                        ${extra}
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-[9px] font-black text-slate-300 uppercase">${new Date(task.createdAt).toLocaleDateString()}</span>
+                            ${task.category==='inbox'?`<button onclick="openProcess(${task.id})" class="bg-indigo-600 text-white px-3 py-1 rounded-lg text-[9px] font-bold">PROCESAR</button>`:`<button onclick="toggleMain(${task.id})" class="text-2xl">${task.completed?'✅':'⚪'}</button>`}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            });
+        };
+
+        window.toggleMain = (id) => {
+            tasks = tasks.map(t => t.id === id ? {...t, completed: !t.completed, completedAt: !t.completed ? new Date().toISOString() : null} : t);
+            syncData();
+        };
+
+        window.addSub = (pId, text) => {
+            if(!text.trim()) return;
+            tasks = tasks.map(t => t.id === pId ? {...t, subtasks: [...t.subtasks, {id: Date.now(), text: text.trim(), done: false}]} : t);
+            syncData();
+        };
+
+        window.deleteSub = (pId, sId) => {
+            tasks = tasks.map(t => t.id === pId ? {...t, subtasks: t.subtasks.filter(s => s.id !== sId), completed: t.subtasks.length === 1 ? true : t.completed, completedAt: t.subtasks.length === 1 ? new Date().toISOString() : t.completedAt} : t);
+            syncData();
+        };
+
+        window.toggleSub = (pId, sId) => {
+            tasks = tasks.map(t => t.id === pId ? {...t, subtasks: t.subtasks.map(s => s.id === sId ? {...s, done: !s.done} : s)} : t);
+            syncData();
+        };
+
+        window.updateDate = (id, d) => {
+            tasks = tasks.map(t => t.id === id ? {...t, scheduledDate: d || null} : t);
+            syncData();
+        };
+
+        window.deleteTask = (id) => { tasks = tasks.filter(t => t.id !== id); syncData(); };
+        window.openProcess = (id) => { processingId = id; document.getElementById('modal-task-text').innerText = tasks.find(t => t.id === id).text; document.getElementById('process-modal').classList.replace('hidden', 'flex'); };
+        window.closeModal = () => document.getElementById('process-modal').classList.replace('flex', 'hidden');
+        window.setYesAction = () => { document.getElementById('action-options').classList.remove('hidden'); document.getElementById('no-action-options').classList.add('hidden'); };
+        window.setNoAction = () => { document.getElementById('action-options').classList.add('hidden'); document.getElementById('no-action-options').classList.remove('hidden'); };
+        window.moveTo = (cat) => { tasks = tasks.map(t => t.id === processingId ? {...t, category: cat} : t); closeModal(); syncData(); };
+        window.deleteCurrentTask = () => { tasks = tasks.filter(t => t.id !== processingId); closeModal(); syncData(); };
+        window.clearAll = () => { if(confirm('¿Borrar todo?')) { tasks = []; syncData(); } };
+
+        window.toggleReport = () => {
+            const p = document.getElementById('report-panel');
+            if(p.classList.contains('hidden')) { updateReportUI(); p.classList.replace('hidden', 'flex'); }
+            else p.classList.replace('flex', 'hidden');
+        };
+
+        window.changePeriod = (p) => {
+            currentPeriod = p;
+            ['day', 'week', 'month', 'year'].forEach(x => {
+                const btn = document.getElementById(`btn-period-${x}`);
+                btn.classList.toggle('tab-active', x === p);
+                btn.classList.toggle('text-slate-500', x !== p);
+            });
+            updateReportUI();
+        };
+
+        window.updateReportUI = () => {
+            const now = new Date();
+            let start;
+            if (currentPeriod === 'day') start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            else if (currentPeriod === 'week') start = new Date(now.getTime() - 7*24*60*60*1000);
+            else if (currentPeriod === 'month') start = new Date(now.getTime() - 30*24*60*60*1000);
+            else start = new Date(now.getTime() - 365*24*60*60*1000);
+
+            const done = tasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt) >= start);
+            document.getElementById('stat-done').innerText = done.length;
+            document.getElementById('stat-active').innerText = tasks.filter(t => !t.completed).length;
+
+            const list = document.getElementById('archive-list');
+            list.innerHTML = done.sort((a,b)=>b.id-a.id).map(t => `
+                <div class="p-3 bg-white border border-slate-100 rounded-xl flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-700 truncate">${t.text}</span>
+                    <button onclick="restoreTask(${t.id})" class="text-indigo-500 text-[10px] font-bold">RESTAURAR</button>
+                </div>
+            `).join('') || '<p class="text-[10px] text-slate-400 italic text-center">Vacio</p>';
+        };
+
+        window.restoreTask = (id) => { tasks = tasks.map(t => t.id === id ? {...t, completed: false, completedAt: null} : t); syncData(); };
+
+        // Init
+        initAuth();
+    </script>
+</body>
+</html>
